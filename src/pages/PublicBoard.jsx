@@ -44,10 +44,10 @@ export default function PublicBoard() {
 
         return {
           ...member,
-          yesterdayStatus: yesterdayLog?.status_code || "NR",
+          yesterdayStatus: yesterdayLog?.status_code || null,
           todayCheckIn: dailyAttendance?.check_in_time || null,
-          todayStatus: todayLog?.status_code || "NR",
-          tomorrowStatus: tomorrowLog?.status_code || "NR",
+          todayStatus: todayLog?.status_code || null,
+          tomorrowStatus: tomorrowLog?.status_code || null,
         };
       })
     );
@@ -101,7 +101,7 @@ export default function PublicBoard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-1 md:p-4">
+    <div className="min-h-screen bg-slate-900 p-1 md:p-4 text-slate-100 flex flex-col justify-between overflow-x-hidden">
       {/* Header - Ultra compact for mobile */}
       <div className="max-w-6xl mx-auto mb-1 md:mb-6 text-center">
         <h1 className="text-sm md:text-5xl font-bold text-white mb-0.5 md:mb-2 tracking-tight">Diazepam Group</h1>
@@ -147,21 +147,21 @@ export default function PublicBoard() {
               {/* 3 Status Boxes: Yesterday | Today | Tomorrow */}
               <div className="flex gap-0.5 md:gap-2 mb-0.5 md:mb-4 w-full">
                 {/* Yesterday - Gray */}
-                <div className="flex-1 py-0.5 md:py-2 rounded-sm md:rounded-xl bg-slate-700 flex flex-col items-center justify-center">
-                  <div className="font-bold text-[9px] md:text-lg text-slate-400">{member.yesterdayStatus || "NR"}</div>
-                  <div className="text-[6px] md:text-xs text-slate-500 uppercase font-medium">Kemarin</div>
+                <div className="flex-1 bg-slate-700/50 rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center border border-slate-600">
+                  <div className="text-[10px] md:text-xl font-bold text-slate-300">{member.yesterdayStatus || "-"}</div>
+                  <div className="text-[6px] md:text-xs text-slate-500 uppercase">Kemarin</div>
                 </div>
 
-                {/* Today - Always Blue */}
-                <div className="flex-1 py-0.5 md:py-2 rounded-sm md:rounded-xl bg-blue-500 flex flex-col items-center justify-center">
-                  <div className="font-bold text-[9px] md:text-lg text-white">{member.todayStatus || "NR"}</div>
-                  <div className="text-[6px] md:text-xs text-blue-100 uppercase font-medium">Hari Ini</div>
+                {/* Today - Blue (Active) */}
+                <div className="flex-1 bg-blue-600 rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center shadow-lg shadow-blue-900/20 transform scale-105 border border-blue-500">
+                  <div className="text-[11px] md:text-2xl font-bold text-white">{member.todayStatus || "-"}</div>
+                  <div className="text-[6px] md:text-xs text-blue-100 uppercase font-bold">Hari Ini</div>
                 </div>
 
                 {/* Tomorrow - Gray */}
-                <div className="flex-1 py-0.5 md:py-2 rounded-sm md:rounded-xl bg-slate-700 flex flex-col items-center justify-center">
-                  <div className="font-bold text-[9px] md:text-lg text-slate-400">{member.tomorrowStatus || "NR"}</div>
-                  <div className="text-[6px] md:text-xs text-slate-500 uppercase font-medium">Besok</div>
+                <div className="flex-1 bg-slate-700/50 rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center border border-slate-600">
+                  <div className="text-[10px] md:text-xl font-bold text-slate-300">{member.tomorrowStatus || "-"}</div>
+                  <div className="text-[6px] md:text-xs text-slate-500 uppercase">Besok</div>
                 </div>
               </div>
 
@@ -172,7 +172,7 @@ export default function PublicBoard() {
 
                 <div className="flex items-center justify-center gap-1 opacity-80">
                   <span className="text-[7px] md:text-sm text-slate-400">Check In SS6</span>
-                  {member.todayStatus && member.todayStatus !== "NR" ? <CheckCircle className="w-2 h-2 md:w-4 md:h-4 text-green-500" /> : <Hourglass className="w-2 h-2 md:w-4 md:h-4 text-yellow-500 animate-pulse" />}
+                  {member.todayStatus ? <CheckCircle className="w-2 h-2 md:w-4 md:h-4 text-green-500" /> : <Hourglass className="w-2 h-2 md:w-4 md:h-4 text-yellow-500 animate-pulse" />}
                 </div>
               </div>
             </div>

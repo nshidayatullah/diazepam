@@ -179,7 +179,7 @@ export default function ManageDailyAttendance() {
 
                   // Status Logic
                   const logRecord = statusRecords[member.id] || {};
-                  const currentStatus = editedStatuses[member.id] !== undefined ? editedStatuses[member.id] : logRecord.status_code || "NR";
+                  const currentStatus = editedStatuses[member.id] !== undefined ? editedStatuses[member.id] : logRecord.status_code || "";
                   const hasStatusChanges = editedStatuses[member.id] !== undefined && editedStatuses[member.id] !== logRecord.status_code;
 
                   const hasChanges = hasTimeChanges || hasStatusChanges;
@@ -209,11 +209,16 @@ export default function ManageDailyAttendance() {
                       <td className="p-4">
                         <div className="flex flex-col gap-1">
                           <select value={currentStatus} onChange={(e) => handleStatusChange(member.id, e.target.value)} className="bg-slate-700 text-white px-3 py-2 rounded-md outline-none focus:ring-2 focus:ring-blue-500 w-48 text-sm">
-                            <option value="NR">NR (No Record)</option>
-                            <option value="DR">DR (Day Regular - Hadir)</option>
-                            <option value="DE">DE (Day Extra - Hadir)</option>
-                            <option value="DL">DL (Day Leave - Cuti)</option>
-                            <option value="OL">OL (Off/Libur)</option>
+                            <option value="">-- No Data --</option>
+                            <option value="NR">NR (Night Regular)</option>
+                            <option value="DR">DR (Day Regular - Pagi)</option>
+                            <option value="DE">DE (Day Extra - Pagi)</option>
+                            <option value="DL">DL (Day Leave - Pagi/Cuti)</option>
+                            <option value="NE">NE (Night Extra - Malam)</option>
+                            <option value="NL">NL (Night Leave - Malam)</option>
+                            <option value="CR">CR (Cuti Roster)</option>
+                            <option value="OL">OL (Off)</option>
+                            <option value="OR">OR (Off Roster)</option>
                             <option value="AL">AL (Alfa)</option>
                           </select>
                           {hasStatusChanges && <span className="text-xs text-yellow-400">• Status Modified</span>}
