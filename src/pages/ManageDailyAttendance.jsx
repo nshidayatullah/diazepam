@@ -91,12 +91,15 @@ export default function ManageDailyAttendance() {
 
       // 2. Save Status (Attendance Logs)
       if (newStatus !== undefined) {
-        const { error: statusError } = await supabase.from("attendance_logs").insert({
-          member_id: memberId,
-          date: selectedDate,
-          status_code: newStatus,
-          created_at: new Date().toISOString(),
-        });
+        const { error: statusError } = await supabase.from("attendance_logs").upsert(
+          {
+            member_id: memberId,
+            date: selectedDate,
+            status_code: newStatus,
+            created_at: new Date().toISOString(),
+          },
+          { onConflict: "member_id,date" }
+        );
         if (statusError) throw statusError;
       }
 
