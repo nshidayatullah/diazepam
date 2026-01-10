@@ -5,9 +5,11 @@ import { Calendar, Clock, Save, Check } from "lucide-react";
 export default function ManageDailyAttendance() {
   const [members, setMembers] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState({});
+  const [statusRecords, setStatusRecords] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [editedTimes, setEditedTimes] = useState({});
+  const [editedStatuses, setEditedStatuses] = useState({});
   const [saving, setSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
 
@@ -19,17 +21,30 @@ export default function ManageDailyAttendance() {
 
     setMembers(membersData || []);
 
-    // Fetch attendance records for selected date
+    // Fetch daily_attendance (Check-ins)
     const { data: attendanceData } = await supabase.from("daily_attendance").select("*").eq("date", selectedDate);
 
-    // Convert to object with member_id as key
+    // Fetch attendance_logs (Status SS6)
+    // Note: there might be multiple logs per day, we take the latest one or assume one per day protocol
+    const { data: logsData } = await supabase.from("attendance_logs").select("*").eq("date", selectedDate);
+
+    // Process Daily Attendance
     const recordsObj = {};
     (attendanceData || []).forEach((record) => {
       recordsObj[record.member_id] = record;
     });
-
     setAttendanceRecords(recordsObj);
-    setEditedTimes({}); // Reset edited times when fetching new data
+
+    // Process Logs (Status)
+    const logsObj = {};
+    (logsData || []).forEach((log) => {
+      // If multiple logs, last one overwrites (which is usually what we want)
+      logsObj[log.member_id] = log;
+    });
+    setStatusRecords(logsObj);
+
+    setEditedTimes({});
+    setEditedStatuses({});
     setLoading(false);
   }, [selectedDate]);
 
@@ -40,36 +55,60 @@ export default function ManageDailyAttendance() {
     }));
   };
 
+  const handleStatusChange = (memberId, newStatus) => {
+    setEditedStatuses((prev) => ({
+      ...prev,
+      [memberId]: newStatus,
+    }));
+  };
+
   const handleSave = async (memberId) => {
     setSaving(true);
     const newTime = editedTimes[memberId];
+    const newStatus = editedStatuses[memberId];
     const member = members.find((m) => m.id === memberId);
 
     try {
-      // Upsert (insert or update) the attendance record
-      const { error } = await supabase.from("daily_attendance").upsert(
-        {
+      // 1. Save Time (Daily Attendance) - Only if edited or exists
+      // If newTime is undefined (not edited), check if we need to preserve existing?
+      // Actually editedTimes only has value if CHANGED.
+      // But if we click Save, maybe we want to save Status but Time is unchanged.
+      // So checking !== undefined identifies if Time was touched.
+      if (newTime !== undefined) {
+        const { error: timeError } = await supabase.from("daily_attendance").upsert(
+          {
+            member_id: memberId,
+            date: selectedDate,
+            check_in_time: newTime,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "member_id,date",
+          }
+        );
+        if (timeError) throw timeError;
+      }
+
+      // 2. Save Status (Attendance Logs)
+      if (newStatus !== undefined) {
+        const { error: statusError } = await supabase.from("attendance_logs").insert({
           member_id: memberId,
           date: selectedDate,
-          check_in_time: newTime,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "member_id,date",
-        }
-      );
-
-      if (error) throw error;
+          status_code: newStatus,
+          created_at: new Date().toISOString(),
+        });
+        if (statusError) throw statusError;
+      }
 
       // Show success message
-      setSavedMessage(`✓ Saved ${member.name}'s check-in time`);
+      setSavedMessage(`✓ Saved ${member.name}`);
       setTimeout(() => setSavedMessage(""), 3000);
 
       // Refresh data
       await fetchData();
     } catch (error) {
       console.error("Error saving:", error);
-      alert("Failed to save check-in time");
+      alert("Failed to save: " + error.message);
     } finally {
       setSaving(false);
     }
@@ -113,28 +152,37 @@ export default function ManageDailyAttendance() {
               <tr>
                 <th className="p-4 text-left">Member</th>
                 <th className="p-4 text-left">NRP</th>
-                <th className="p-4 text-left">Check-in Time</th>
+                <th className="p-4 text-left">P5M Time</th>
+                <th className="p-4 text-left">SS6 Status (PPA)</th>
                 <th className="p-4 text-left">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="p-8 text-center text-slate-500">
+                  <td colSpan="5" className="p-8 text-center text-slate-500">
                     Loading...
                   </td>
                 </tr>
               ) : members.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="p-8 text-center text-slate-500">
+                  <td colSpan="5" className="p-8 text-center text-slate-500">
                     No members found
                   </td>
                 </tr>
               ) : (
                 members.map((member) => {
+                  // Time Logic
                   const record = attendanceRecords[member.id] || {};
                   const currentTime = editedTimes[member.id] !== undefined ? editedTimes[member.id] : record.check_in_time || "";
-                  const hasChanges = editedTimes[member.id] !== undefined && editedTimes[member.id] !== record.check_in_time;
+                  const hasTimeChanges = editedTimes[member.id] !== undefined && editedTimes[member.id] !== record.check_in_time;
+
+                  // Status Logic
+                  const logRecord = statusRecords[member.id] || {};
+                  const currentStatus = editedStatuses[member.id] !== undefined ? editedStatuses[member.id] : logRecord.status_code || "NR";
+                  const hasStatusChanges = editedStatuses[member.id] !== undefined && editedStatuses[member.id] !== logRecord.status_code;
+
+                  const hasChanges = hasTimeChanges || hasStatusChanges;
 
                   return (
                     <tr key={member.id} className="hover:bg-slate-700/30 transition-colors">
@@ -143,15 +191,32 @@ export default function ManageDailyAttendance() {
 
                       {/* Check-in Time Input (Editable) */}
                       <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Clock size={16} className="text-slate-400" />
-                          <input
-                            type="time"
-                            value={currentTime}
-                            onChange={(e) => handleTimeChange(member.id, e.target.value)}
-                            className="bg-slate-700 text-white px-3 py-2 rounded-md outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                          />
-                          {hasChanges && <span className="text-xs text-yellow-400">• Modified</span>}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <Clock size={16} className="text-slate-400" />
+                            <input
+                              type="time"
+                              value={currentTime}
+                              onChange={(e) => handleTimeChange(member.id, e.target.value)}
+                              className="bg-slate-700 text-white px-3 py-2 rounded-md outline-none focus:ring-2 focus:ring-blue-500 transition-all w-32"
+                            />
+                          </div>
+                          {hasTimeChanges && <span className="text-xs text-yellow-400 pl-6">• Time Modified</span>}
+                        </div>
+                      </td>
+
+                      {/* Status Input (Editable) */}
+                      <td className="p-4">
+                        <div className="flex flex-col gap-1">
+                          <select value={currentStatus} onChange={(e) => handleStatusChange(member.id, e.target.value)} className="bg-slate-700 text-white px-3 py-2 rounded-md outline-none focus:ring-2 focus:ring-blue-500 w-48 text-sm">
+                            <option value="NR">NR (No Record)</option>
+                            <option value="DR">DR (Day Regular - Hadir)</option>
+                            <option value="DE">DE (Day Extra - Hadir)</option>
+                            <option value="DL">DL (Day Leave - Cuti)</option>
+                            <option value="OL">OL (Off/Libur)</option>
+                            <option value="AL">AL (Alfa)</option>
+                          </select>
+                          {hasStatusChanges && <span className="text-xs text-yellow-400">• Status Modified</span>}
                         </div>
                       </td>
 
@@ -164,7 +229,7 @@ export default function ManageDailyAttendance() {
                             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-md transition-colors text-sm font-medium"
                           >
                             <Save size={16} />
-                            {saving ? "Saving..." : "Save"}
+                            {saving ? "Saving..." : "Save Changes"}
                           </button>
                         )}
                       </td>

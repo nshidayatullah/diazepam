@@ -31,16 +31,16 @@ export default function PublicBoard() {
         const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
         // Get yesterday's status from attendance_logs (PPA sync)
-        const { data: yesterdayLog } = await supabase.from("attendance_logs").select("status_code").eq("member_id", member.id).eq("date", yesterdayStr).maybeSingle();
+        const { data: yesterdayLog } = await supabase.from("attendance_logs").select("status_code").eq("member_id", member.id).eq("date", yesterdayStr).order("created_at", { ascending: false }).limit(1).maybeSingle();
 
         // Get today's status from attendance_logs (PPA sync)
-        const { data: todayLog } = await supabase.from("attendance_logs").select("status_code").eq("member_id", member.id).eq("date", today).maybeSingle();
+        const { data: todayLog } = await supabase.from("attendance_logs").select("status_code").eq("member_id", member.id).eq("date", today).order("created_at", { ascending: false }).limit(1).maybeSingle();
 
         // Get today's check-in time from daily_attendance (manual admin input)
         const { data: dailyAttendance } = await supabase.from("daily_attendance").select("check_in_time").eq("member_id", member.id).eq("date", today).maybeSingle();
 
         // Get tomorrow's status from attendance_logs (PPA sync)
-        const { data: tomorrowLog } = await supabase.from("attendance_logs").select("status_code").eq("member_id", member.id).eq("date", tomorrowStr).maybeSingle();
+        const { data: tomorrowLog } = await supabase.from("attendance_logs").select("status_code").eq("member_id", member.id).eq("date", tomorrowStr).order("created_at", { ascending: false }).limit(1).maybeSingle();
 
         return {
           ...member,
