@@ -209,154 +209,141 @@ export default function AttendanceByMember() {
         <div className="bg-slate-800 rounded-lg p-8 text-center text-slate-400">No members found. Please add members first.</div>
       ) : (
         <>
-          {/* Stepper Navigation */}
-          <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
-              {/* Previous Button */}
-              <button
-                onClick={() => {
-                  const currentIndex = members.findIndex((m) => m.id === selectedMemberId);
-                  if (currentIndex > 0) {
-                    setSelectedMemberId(members[currentIndex - 1].id);
-                  }
-                }}
-                disabled={members.findIndex((m) => m.id === selectedMemberId) === 0}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
-              >
-                <ChevronLeft size={20} />
-                <span className="hidden sm:inline">Previous</span>
-              </button>
-
-              {/* Current Member Indicator */}
-              <div className="flex items-center gap-3 text-center px-4">
-                <div className="flex items-center gap-2 text-white">
-                  <User size={20} className="text-indigo-400" />
-                  <div>
-                    <div className="font-bold text-lg">{selectedMember?.name}</div>
-                    <div className="text-xs text-slate-400 font-mono">
-                      Member {members.findIndex((m) => m.id === selectedMemberId) + 1} of {members.length}
-                    </div>
+          {/* Main Layout: Vertical Tabs (Left) + Content (Right) */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Left Sidebar: Member List Tabs */}
+            <div className="w-full lg:w-64 flex-shrink-0 space-y-2 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+              {members.map((member) => (
+                <button
+                  key={member.id}
+                  onClick={() => setSelectedMemberId(member.id)}
+                  className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${
+                    selectedMemberId === member.id ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20" : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+                  }`}
+                >
+                  <div className={`p-1.5 rounded-full ${selectedMemberId === member.id ? "bg-white/20" : "bg-slate-700"}`}>
+                    <User size={16} />
                   </div>
-                </div>
-              </div>
-
-              {/* Next Button */}
-              <button
-                onClick={() => {
-                  const currentIndex = members.findIndex((m) => m.id === selectedMemberId);
-                  if (currentIndex < members.length - 1) {
-                    setSelectedMemberId(members[currentIndex + 1].id);
-                  }
-                }}
-                disabled={members.findIndex((m) => m.id === selectedMemberId) === members.length - 1}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
-              >
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight size={20} />
-              </button>
+                  <div className="truncate">
+                    <div className="font-medium text-sm truncate">{member.name}</div>
+                    <div className={`text-xs ${selectedMemberId === member.id ? "text-blue-200" : "text-slate-500"} font-mono`}>{member.nrp}</div>
+                  </div>
+                </button>
+              ))}
             </div>
 
-            {/* Member Info & Stats */}
-            {selectedMember && (
-              <div className="p-6 bg-slate-800/50">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-white">{selectedMember.name}</h2>
-                    <p className="text-slate-400 font-mono text-sm">NRP: {selectedMember.nrp}</p>
-                  </div>
-
-                  {/* Statistics Cards */}
-                  <div className="flex gap-4">
-                    <div className="bg-slate-700/50 rounded-lg px-4 py-3 border border-slate-600">
-                      <div className="text-xs text-slate-400 mb-1">Total Days</div>
-                      <div className="text-2xl font-bold text-white">{totalDays}</div>
-                    </div>
-                    <div className="bg-emerald-500/10 rounded-lg px-4 py-3 border border-emerald-500/30">
-                      <div className="text-xs text-emerald-400 mb-1">Present</div>
-                      <div className="text-2xl font-bold text-emerald-400">{presentDays}</div>
-                    </div>
-                    <div className="bg-red-500/10 rounded-lg px-4 py-3 border border-red-500/30">
-                      <div className="text-xs text-red-400 mb-1">Absent</div>
-                      <div className="text-2xl font-bold text-red-400">{absentDays}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Attendance Logs Table */}
+            {/* Right Content: Member Detail & Table */}
+            <div className="flex-1 min-w-0">
+              {selectedMember ? (
                 <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+                  <div className="p-6 border-b border-slate-700 bg-slate-800/50">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <h2 className="text-xl font-bold text-white mb-1">{selectedMember.name}</h2>
+                        <div className="flex items-center gap-4 text-sm text-slate-400">
+                          <span className="font-mono bg-slate-700 px-2 py-0.5 rounded">NRP: {selectedMember.nrp}</span>
+                        </div>
+                      </div>
+
+                      {/* Statistics Cards */}
+                      <div className="flex gap-2">
+                        <div className="bg-slate-700/50 rounded-lg px-3 py-2 border border-slate-600 min-w-[80px]">
+                          <div className="text-[10px] text-slate-400 uppercase tracking-wider">Total</div>
+                          <div className="text-xl font-bold text-white">{totalDays}</div>
+                        </div>
+                        <div className="bg-emerald-500/10 rounded-lg px-3 py-2 border border-emerald-500/30 min-w-[80px]">
+                          <div className="text-[10px] text-emerald-400 uppercase tracking-wider">Present</div>
+                          <div className="text-xl font-bold text-emerald-400">{presentDays}</div>
+                        </div>
+                        <div className="bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/30 min-w-[80px]">
+                          <div className="text-[10px] text-red-400 uppercase tracking-wider">Absent</div>
+                          <div className="text-xl font-bold text-red-400">{absentDays}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Attendance Logs Table */}
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                      <thead className="bg-slate-750 text-slate-400 text-xs uppercase tracking-wider">
+                      <thead className="bg-slate-750 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700">
                         <tr>
-                          <th className="p-4">
+                          <th className="p-4 whitespace-nowrap">
                             <div className="flex items-center space-x-2">
                               <Calendar size={14} />
                               <span>Date</span>
                             </div>
                           </th>
-                          <th className="p-4">#</th>
-                          <th className="p-4">
+                          <th className="p-4 whitespace-nowrap">Status</th>
+                          <th className="p-4 whitespace-nowrap">
                             <div className="flex items-center space-x-2">
-                              <Clock size={14} />
+                              {/* <Clock size={14} /> */}
                               <span>Check In</span>
                             </div>
                           </th>
-                          <th className="p-4">
+                          <th className="p-4 whitespace-nowrap">
                             <div className="flex items-center space-x-2">
-                              <Clock size={14} />
+                              {/* <Clock size={14} /> */}
                               <span>Check Out</span>
                             </div>
                           </th>
-                          <th className="p-4">Job</th>
-                          <th className="p-4">Saya Peduli</th>
+                          <th className="p-4 whitespace-nowrap">Job</th>
+                          <th className="p-4 whitespace-nowrap">Saya Peduli</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-700">
                         {logsLoading ? (
                           <tr>
-                            <td colSpan="6" className="p-8 text-center text-slate-500">
-                              Loading attendance data...
+                            <td colSpan="6" className="p-12 text-center text-slate-500">
+                              <Loader2 size={24} className="animate-spin mx-auto mb-2" />
+                              Loading data...
                             </td>
                           </tr>
                         ) : attendanceLogs.length === 0 ? (
                           <tr>
-                            <td colSpan="6" className="p-8 text-center text-slate-500">
-                              No attendance records found for this member.
+                            <td colSpan="6" className="p-12 text-center text-slate-500">
+                              No attendance records found.
                             </td>
                           </tr>
                         ) : (
                           attendanceLogs.map((log) => (
-                            <tr key={log.id} className="hover:bg-slate-700/30 transition-colors">
-                              <td className="p-4 text-white font-medium">{log.date}</td>
+                            <tr key={log.id} className="hover:bg-slate-700/30 transition-colors text-sm">
+                              <td className="p-4 text-white font-medium whitespace-nowrap">{log.date}</td>
                               <td className="p-4">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs font-bold ${
+                                  className={`px-2 py-0.5 rounded text-xs font-bold inline-block min-w-[30px] text-center ${
                                     log.status_code === "DR"
                                       ? "bg-blue-500/20 text-blue-400"
-                                      : log.status_code === "NR"
-                                      ? "bg-gray-500/20 text-gray-400"
-                                      : log.status_code === "AL"
-                                      ? "bg-yellow-500/20 text-yellow-400"
+                                      : log.status_code === "DL"
+                                      ? "bg-orange-500/20 text-orange-400"
                                       : log.status_code === "DE"
                                       ? "bg-purple-500/20 text-purple-400"
-                                      : log.status_code === "OL"
-                                      ? "bg-orange-500/20 text-orange-400"
                                       : log.status_code === "NE"
-                                      ? "bg-red-500/20 text-red-400"
+                                      ? "bg-indigo-500/20 text-indigo-400"
+                                      : log.status_code === "NL"
+                                      ? "bg-orange-500/20 text-orange-400"
+                                      : log.status_code === "NR"
+                                      ? "bg-indigo-500/20 text-indigo-400" // Night Regular treated as valid now
+                                      : log.status_code === "AL"
+                                      ? "bg-red-500/20 text-red-500"
+                                      : log.status_code === "OL"
+                                      ? "bg-slate-600/30 text-slate-400"
                                       : "bg-slate-700 text-slate-400"
                                   }`}
                                 >
                                   {log.status_code || "-"}
                                 </span>
                               </td>
-                              <td className="p-4">
-                                <span className={`font-mono ${log.check_in && log.check_in !== "" ? "text-emerald-400" : "text-slate-500"}`}>{log.check_in || "-"}</span>
+                              <td className="p-4 whitespace-nowrap">
+                                <span className={`font-mono ${log.check_in && log.check_in !== "" ? "text-emerald-400" : "text-slate-600"}`}>{log.check_in || "-"}</span>
                               </td>
-                              <td className="p-4">
-                                <span className={`font-mono ${log.check_out && log.check_out !== "" ? "text-amber-400" : "text-slate-500"}`}>{log.check_out || "-"}</span>
+                              <td className="p-4 whitespace-nowrap">
+                                <span className={`font-mono ${log.check_out && log.check_out !== "" ? "text-amber-400" : "text-slate-600"}`}>{log.check_out || "-"}</span>
                               </td>
-                              <td className="p-4 text-slate-300">{log.job || "-"}</td>
-                              <td className="p-4 text-center">{log.saya_peduli && log.saya_peduli.includes("✖") ? <span className="text-red-500 text-lg">✖</span> : <span className="text-slate-600">-</span>}</td>
+                              <td className="p-4 text-slate-300 max-w-[200px] truncate" title={log.job}>
+                                {log.job || "-"}
+                              </td>
+                              <td className="p-4 text-center">{log.saya_peduli && log.saya_peduli.includes("✖") ? <span className="text-red-500 font-bold">✖</span> : <span className="text-slate-600">-</span>}</td>
                             </tr>
                           ))
                         )}
@@ -364,8 +351,13 @@ export default function AttendanceByMember() {
                     </table>
                   </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="bg-slate-800 rounded-lg p-12 text-center text-slate-500 border border-slate-700 flex flex-col items-center justify-center h-full min-h-[400px]">
+                  <User size={48} className="mb-4 opacity-20" />
+                  <p>Select a member from the list to view attendance details.</p>
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
