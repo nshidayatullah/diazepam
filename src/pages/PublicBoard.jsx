@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { User, CheckCircle, Hourglass } from "lucide-react";
 import Footer from "../components/Footer";
+import Galaxy from "../components/Galaxy";
 
 export default function PublicBoard() {
   const [membersData, setMembersData] = useState([]);
@@ -101,7 +102,12 @@ export default function PublicBoard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-1 md:p-4 text-slate-100 flex flex-col justify-between overflow-x-hidden">
+    <div className="min-h-screen bg-black relative isolate p-1 md:p-4 text-slate-100 flex flex-col justify-between overflow-x-hidden">
+      {/* Background Animation */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <Galaxy starSpeed={0.3} density={1.2} rotationSpeed={0.05} />
+      </div>
+
       {/* Header - Ultra compact for mobile */}
       <div className="max-w-6xl mx-auto mb-1 md:mb-6 text-center">
         <h1 className="text-sm md:text-5xl font-bold text-white mb-0.5 md:mb-2 tracking-tight">Diazepam Group</h1>
