@@ -213,16 +213,16 @@ export default function ManageDailyAttendance() {
                         <div className="flex flex-col gap-1">
                           <select value={currentStatus} onChange={(e) => handleStatusChange(member.id, e.target.value)} className="bg-slate-700 text-white px-3 py-2 rounded-md outline-none focus:ring-2 focus:ring-blue-500 w-48 text-sm">
                             <option value="">-- No Data --</option>
-                            <option value="DR">DR (Day Regular - Hadir Pagi)</option>
-                            <option value="DL">DL (Day Leave - Cuti Pagi)</option>
-                            <option value="DE">DE (Day Extra - Lembur Pagi)</option>
-                            <option value="NE">NE (Night Extra - Lembur Malam)</option>
-                            <option value="NL">NL (Night Leave - Cuti Malam)</option>
-                            <option value="NR">NR (Night Regular - Hadir Malam)</option>
-                            <option value="CR">CR (Cuti Roster)</option>
-                            <option value="OL">OL (Off - Libur)</option>
-                            <option value="OR">OR (Off Roster)</option>
-                            <option value="AL">AL (Alfa)</option>
+                            <option value="DR">DR</option>
+                            <option value="DL">DL</option>
+                            <option value="DE">DE</option>
+                            <option value="NE">NE</option>
+                            <option value="NL">NL</option>
+                            <option value="NR">NR</option>
+                            <option value="CR">CR</option>
+                            <option value="OL">OL</option>
+                            <option value="OR">OR</option>
+                            <option value="AL">AL</option>
                           </select>
                           {hasStatusChanges && <span className="text-xs text-yellow-400">• Status Modified</span>}
                         </div>
