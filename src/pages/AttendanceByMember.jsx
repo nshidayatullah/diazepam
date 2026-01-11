@@ -96,7 +96,7 @@ export default function AttendanceByMember() {
       return { success: true, name: member.name, count: attendanceRecords.length };
     } catch (error) {
       console.error(`Error syncing ${member.name}:`, error);
-      return { success: false, name: member.name };
+      return { success: false, name: member.name, error: error.message };
     }
   };
 
@@ -116,7 +116,8 @@ export default function AttendanceByMember() {
     }
 
     const successCount = results.filter((r) => r.success).length;
-    const failCount = results.filter((r) => !r.success).length;
+    const failures = results.filter((r) => !r.success);
+    const failCount = failures.length;
 
     setSyncing(false);
 
@@ -126,9 +127,14 @@ export default function AttendanceByMember() {
         message: `Successfully synced ${successCount} members!`,
       });
     } else {
+      // Extract unique error messages
+      const errorMessages = [...new Set(failures.map((f) => f.error))].join(", ");
+      const isCorsError = errorMessages.includes("403") || errorMessages.includes("Network Error");
+
       setSyncStatus({
         type: "error",
-        message: `Synced ${successCount} members. Failed: ${failCount}`,
+        message: `Synced ${successCount}. Failed: ${failCount}. Error: ${errorMessages}`,
+        link: isCorsError ? "https://cors-anywhere.herokuapp.com/corsdemo" : null,
       });
     }
 
@@ -137,7 +143,8 @@ export default function AttendanceByMember() {
       await fetchAttendanceLogs(selectedMemberId);
     }
 
-    setTimeout(() => setSyncStatus(null), 5000);
+    // Increase timeout for error reading
+    setTimeout(() => setSyncStatus(null), 10000);
   };
 
   useEffect(() => {
@@ -199,7 +206,14 @@ export default function AttendanceByMember() {
           ) : (
             <Loader2 size={20} className="flex-shrink-0 mt-0.5 animate-spin" />
           )}
-          <span className="font-medium">{syncStatus.message}</span>
+          <div className="flex flex-col gap-1">
+            <span className="font-medium">{syncStatus.message}</span>
+            {syncStatus.link && (
+              <a href={syncStatus.link} target="_blank" rel="noopener noreferrer" className="underline font-bold text-xs uppercase hover:text-white mt-1 block">
+                👉 Click here to activate Proxy Access (Required)
+              </a>
+            )}
+          </div>
         </div>
       )}
 
