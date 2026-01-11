@@ -99,7 +99,21 @@ export default function PublicBoard() {
   const [expandedMember, setExpandedMember] = useState(null);
 
   const fetchMembersWithAttendance = useCallback(async () => {
-    const today = new Date().toISOString().split("T")[0];
+    // FIX: Use Asia/Makassar (WITA) timezone for date calculations to ensure "Today" matches local time
+    // en-CA returns YYYY-MM-DD format
+    const timeZone = "Asia/Makassar";
+    const now = new Date();
+
+    // Helper to get date string with offset
+    const getDateStr = (offsetDays = 0) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() + offsetDays);
+      return d.toLocaleDateString("en-CA", { timeZone });
+    };
+
+    const today = getDateStr(0);
+    const yesterdayStr = getDateStr(-1);
+    const tomorrowStr = getDateStr(1);
 
     // Get first 9 members ordered by NRP
     const { data: members } = await supabase.from("members").select("*").order("nrp").limit(9);
@@ -112,14 +126,6 @@ export default function PublicBoard() {
     // For each member, get attendance data
     const membersWithData = await Promise.all(
       members.map(async (member) => {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split("T")[0];
-
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowStr = tomorrow.toISOString().split("T")[0];
-
         // Get yesterday's status from attendance_logs (PPA sync)
         const { data: yesterdayLog } = await supabase.from("attendance_logs").select("status_code").eq("member_id", member.id).eq("date", yesterdayStr).order("created_at", { ascending: false }).limit(1).maybeSingle();
 
@@ -169,12 +175,16 @@ export default function PublicBoard() {
         console.log("Realtime update: attendance_logs changed");
         fetchMembersWithAttendance(); // Background refresh without loading spinner
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "members" }, () => {
+        console.log("Realtime update: members changed");
+        fetchMembersWithAttendance();
+      })
       .subscribe();
 
-    // Polling fallback every 30 seconds
+    // Polling fallback every 5 seconds (aggressive to ensure updates)
     const pollingTimer = setInterval(() => {
       fetchMembersWithAttendance();
-    }, 30000);
+    }, 5000);
 
     return () => {
       clearInterval(timer);
