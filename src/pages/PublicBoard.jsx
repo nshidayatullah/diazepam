@@ -141,56 +141,58 @@ export default function PublicBoard() {
           {membersData.map((member) => (
             <div
               key={member.id}
-              className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded md:rounded-3xl shadow-2xl p-1 md:p-6 flex flex-col items-center relative overflow-hidden transition-all duration-300 hover:bg-white/[0.05] ring-1 ring-white/5"
+              className="bg-white/[0.01] backdrop-blur-md border border-white/5 rounded md:rounded-3xl shadow-2xl p-1 md:p-6 flex flex-col items-center relative overflow-hidden transition-all duration-300 hover:bg-white/[0.03] ring-1 ring-white/[0.02]"
             >
               {/* Shinny effect overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.05] to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
 
               {/* Avatar - smaller on mobile */}
-              <div className="relative w-7 h-7 md:w-14 md:h-14 bg-gradient-to-br from-indigo-500/70 to-purple-600/70 rounded-full flex items-center justify-center mb-1 md:mb-3 shadow-lg ring-2 ring-white/10 backdrop-blur-sm">
-                <User className="w-4 h-4 md:w-8 md:h-8 text-white" />
+              <div className="relative w-7 h-7 md:w-14 md:h-14 bg-gradient-to-br from-indigo-500/50 to-purple-600/50 rounded-full flex items-center justify-center mb-1 md:mb-3 shadow-lg ring-1 ring-white/10 backdrop-blur-sm">
+                <User className="w-4 h-4 md:w-8 md:h-8 text-white/90" />
               </div>
 
               {/* Name - very small on mobile */}
-              <h2 className="relative text-center text-[8px] md:text-base font-medium text-white mb-0 md:mb-0 line-clamp-2 px-0.5 leading-tight h-[1.2rem] md:min-h-[2.5rem] flex items-end justify-center pb-1 drop-shadow-md">
+              <h2 className="relative text-center text-[8px] md:text-base font-medium text-white/90 mb-0 md:mb-0 line-clamp-2 px-0.5 leading-tight h-[1.2rem] md:min-h-[2.5rem] flex items-end justify-center pb-1 drop-shadow-md">
                 {member.name}
               </h2>
 
               {/* NRP - below name */}
-              <div className="relative text-center text-[7px] md:text-sm text-blue-200/60 mb-0.5 md:mb-2 -mt-1 font-mono tracking-wide">{member.nrp}</div>
+              <div className="relative text-center text-[7px] md:text-sm text-blue-100/50 mb-0.5 md:mb-2 -mt-1 font-mono tracking-wide">{member.nrp}</div>
 
               {/* 3 Status Boxes: Yesterday | Today | Tomorrow */}
               <div className="relative flex gap-0.5 md:gap-2 mb-0.5 md:mb-4 w-full z-10">
                 {/* Yesterday - Glassy Gray */}
-                <div className="flex-1 bg-white/[0.03] backdrop-blur-md rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center border border-white/5">
-                  <div className="text-[10px] md:text-xl font-bold text-slate-300">{member.yesterdayStatus || "-"}</div>
-                  <div className="text-[6px] md:text-xs text-slate-400 uppercase tracking-wider">Kemarin</div>
+                <div className="flex-1 bg-white/[0.02] backdrop-blur-sm rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center border border-white/[0.02]">
+                  <div className="text-[10px] md:text-xl font-bold text-slate-300/80">{member.yesterdayStatus || "-"}</div>
+                  <div className="text-[6px] md:text-xs text-slate-400/70 uppercase tracking-wider">Kemarin</div>
                 </div>
 
                 {/* Today - Glassy Blue (Active) */}
-                <div className="flex-1 bg-blue-600/60 backdrop-blur-md rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center shadow-lg shadow-blue-500/20 transform scale-105 border border-blue-400/30">
+                <div className="flex-1 bg-blue-600/40 backdrop-blur-md rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center shadow-lg shadow-blue-500/10 transform scale-105 border border-blue-400/20">
                   <div className="text-[11px] md:text-2xl font-bold text-white drop-shadow-md">{member.todayStatus || "-"}</div>
-                  <div className="text-[6px] md:text-xs text-blue-50 uppercase font-bold tracking-wider">Hari Ini</div>
+                  <div className="text-[6px] md:text-xs text-blue-50/80 uppercase font-bold tracking-wider">Hari Ini</div>
                 </div>
 
                 {/* Tomorrow - Glassy Gray */}
-                <div className="flex-1 bg-white/[0.03] backdrop-blur-md rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center border border-white/5">
-                  <div className="text-[10px] md:text-xl font-bold text-slate-300">{member.tomorrowStatus || "-"}</div>
-                  <div className="text-[6px] md:text-xs text-slate-400 uppercase tracking-wider">Besok</div>
+                <div className="flex-1 bg-white/[0.02] backdrop-blur-sm rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center border border-white/[0.02]">
+                  <div className="text-[10px] md:text-xl font-bold text-slate-300/80">{member.tomorrowStatus || "-"}</div>
+                  <div className="text-[6px] md:text-xs text-slate-400/70 uppercase tracking-wider">Besok</div>
                 </div>
               </div>
 
               {/* Today's Check-in Time - compact glass */}
-              <div className="relative bg-white/[0.03] backdrop-blur-md rounded md:rounded-2xl py-1 md:py-2 text-center w-full mb-0.5 md:mb-2 border border-white/5 flex flex-col justify-center shadow-inner custom-shadow">
-                <div className="text-sm md:text-3xl font-bold text-white leading-none mb-0.5 drop-shadow-sm tracking-widest">{formatTime(member.todayCheckIn)}</div>
-                <div className={`text-[7px] md:text-sm font-medium my-0 md:my-0.5 leading-tight ${member.todayCheckIn ? "text-emerald-300" : "text-rose-300"} drop-shadow-md`}>{member.todayCheckIn ? "Hadir P5M" : "Tidak Hadir P5M"}</div>
+              <div className="relative bg-white/[0.02] backdrop-blur-sm rounded md:rounded-2xl py-1 md:py-2 text-center w-full mb-0.5 md:mb-2 border border-white/[0.02] flex flex-col justify-center shadow-inner custom-shadow">
+                <div className="text-sm md:text-3xl font-bold text-white/90 leading-none mb-0.5 drop-shadow-sm tracking-widest">{formatTime(member.todayCheckIn)}</div>
+                <div className={`text-[7px] md:text-sm font-medium my-0 md:my-0.5 leading-tight ${member.todayCheckIn ? "text-emerald-300/80" : "text-rose-300/80"} drop-shadow-md`}>
+                  {member.todayCheckIn ? "Hadir P5M" : "Tidak Hadir P5M"}
+                </div>
 
-                <div className="flex items-center justify-center gap-1 opacity-90 mt-1">
-                  <span className="text-[7px] md:text-sm text-slate-300 font-medium tracking-wide">Check In SS6</span>
+                <div className="flex items-center justify-center gap-1 opacity-80 mt-1">
+                  <span className="text-[7px] md:text-sm text-slate-300/60 font-medium tracking-wide">Check In SS6</span>
                   {member.todayStatus ? (
-                    <CheckCircle className="w-2 h-2 md:w-4 md:h-4 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                    <CheckCircle className="w-2 h-2 md:w-4 md:h-4 text-emerald-400/90 drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
                   ) : (
-                    <Hourglass className="w-2 h-2 md:w-4 md:h-4 text-amber-400 animate-pulse drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                    <Hourglass className="w-2 h-2 md:w-4 md:h-4 text-amber-400/90 animate-pulse drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]" />
                   )}
                 </div>
               </div>
