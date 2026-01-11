@@ -249,45 +249,43 @@ export default function PublicBoard() {
                   <User className="w-3 h-3 md:w-8 md:h-8 text-white/90" />
                 </div>
                 {/* Name */}
-                <h2 className="relative text-center text-[7px] md:text-xl font-medium text-white/90 mb-1 md:mb-1 line-clamp-1 px-0.5 leading-tight w-full drop-shadow-md truncate">{member.name}</h2>
+                <h2 className="relative text-center text-[7px] md:text-xl font-medium text-white mb-1 md:mb-1 line-clamp-1 px-0.5 leading-tight w-full drop-shadow-md truncate">{member.name}</h2>
                 {/* NRP */}
-                <div className="relative text-center text-[5px] md:text-sm text-blue-100/50 mt-0.5 font-mono tracking-wide">{member.nrp}</div>
+                <div className="relative text-center text-[5px] md:text-sm text-white mt-0.5 font-mono tracking-wide">{member.nrp}</div>
               </div>
 
               {/* Middle Section: Status Boxes */}
-              <div className="relative flex gap-1 md:gap-2 w-full z-10 my-0.5 items-center justify-center flex-grow opacity-90 scale-95 md:scale-100">
+              <div className="relative flex gap-1 md:gap-2 w-full z-10 my-0.5 items-center justify-center flex-grow opacity-100 scale-95 md:scale-100">
                 {/* Yesterday */}
-                <div className="flex-1 bg-white/[0.02] backdrop-blur-sm rounded md:rounded-xl py-0.5 md:p-1 flex flex-col items-center justify-center border border-white/[0.02] h-full max-h-[30px] md:max-h-none">
-                  <div className="text-[7px] md:text-xl font-bold text-slate-300/80">{member.yesterdayStatus || "-"}</div>
-                  <div className="text-[4px] md:text-[10px] text-slate-400/70 uppercase tracking-wider scale-90 origin-center">Kemarin</div>
+                <div className="flex-1 bg-white/[0.05] backdrop-blur-sm rounded md:rounded-xl py-0.5 md:p-1 flex flex-col items-center justify-center border border-white/[0.05] h-full max-h-[30px] md:max-h-none">
+                  <div className="text-[7px] md:text-xl font-bold text-white">{member.yesterdayStatus || "-"}</div>
+                  <div className="text-[4px] md:text-[10px] text-white uppercase tracking-wider scale-90 origin-center">Kemarin</div>
                 </div>
 
                 {/* Today */}
                 <div className="flex-1 bg-blue-600/40 backdrop-blur-md rounded md:rounded-xl py-0.5 md:p-1 flex flex-col items-center justify-center shadow-lg shadow-blue-500/10 transform scale-105 border border-blue-400/20 h-full max-h-[35px] md:max-h-none z-20">
                   <div className="text-[8px] md:text-2xl font-bold text-white drop-shadow-md">{member.todayStatus || "-"}</div>
-                  <div className="text-[5px] md:text-xs text-blue-50/80 uppercase font-bold tracking-wider scale-90 origin-center">Hari Ini</div>
+                  <div className="text-[5px] md:text-xs text-white uppercase font-bold tracking-wider scale-90 origin-center">Hari Ini</div>
                 </div>
 
                 {/* Tomorrow */}
-                <div className="flex-1 bg-white/[0.02] backdrop-blur-sm rounded md:rounded-xl py-0.5 md:p-1 flex flex-col items-center justify-center border border-white/[0.02] h-full max-h-[30px] md:max-h-none">
-                  <div className="text-[7px] md:text-xl font-bold text-slate-300/80">{member.tomorrowStatus || "-"}</div>
-                  <div className="text-[4px] md:text-[10px] text-slate-400/70 uppercase tracking-wider scale-90 origin-center">Besok</div>
+                <div className="flex-1 bg-white/[0.05] backdrop-blur-sm rounded md:rounded-xl py-0.5 md:p-1 flex flex-col items-center justify-center border border-white/[0.05] h-full max-h-[30px] md:max-h-none">
+                  <div className="text-[7px] md:text-xl font-bold text-white">{member.tomorrowStatus || "-"}</div>
+                  <div className="text-[4px] md:text-[10px] text-white uppercase tracking-wider scale-90 origin-center">Besok</div>
                 </div>
               </div>
 
               {/* Bottom Section: Time & Status Indicator */}
-              <div className="relative w-full bg-white/[0.02] backdrop-blur-sm rounded md:rounded-2xl py-0.5 md:py-1.5 text-center mb-0 border border-white/[0.02] flex flex-col justify-center shadow-inner custom-shadow flex-shrink-0">
-                <div className="text-[9px] md:text-3xl font-bold text-white/90 leading-none mb-0 drop-shadow-sm tracking-widest">{formatTime(member.todayCheckIn)}</div>
-                <div className={`text-[5px] md:text-sm font-medium my-0 leading-tight ${member.todayCheckIn ? "text-emerald-300/80" : "text-rose-300/80"} drop-shadow-md scale-95 origin-center`}>
-                  {member.todayCheckIn ? "Hadir P5M" : "Tidak Hadir P5M"}
-                </div>
+              <div className="relative w-full bg-white/[0.05] backdrop-blur-sm rounded md:rounded-2xl py-0.5 md:py-1.5 text-center mb-0 border border-white/[0.05] flex flex-col justify-center shadow-inner custom-shadow flex-shrink-0">
+                <div className="text-[9px] md:text-3xl font-bold text-white leading-none mb-0 drop-shadow-sm tracking-widest">{formatTime(member.todayCheckIn)}</div>
+                <div className={`text-[5px] md:text-sm font-medium my-0 leading-tight text-white drop-shadow-md scale-95 origin-center`}>{member.todayCheckIn ? "Hadir P5M" : "Tidak Hadir P5M"}</div>
 
-                <div className="flex items-center justify-center gap-1 opacity-80 mt-0.5 md:mt-1">
-                  <span className="text-[6px] md:text-sm text-slate-300/60 font-medium tracking-wide scale-90 origin-right">Check In SS6</span>
+                <div className="flex items-center justify-center gap-1 opacity-100 mt-0.5 md:mt-1">
+                  <span className="text-[6px] md:text-sm text-white font-medium tracking-wide scale-90 origin-right">Check In SS6</span>
                   {member.todaySS6CheckIn ? (
-                    <span className="text-[7px] md:text-sm text-emerald-400/90 font-mono font-bold drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]">{member.todaySS6CheckIn}</span>
+                    <span className="text-[7px] md:text-sm text-white font-mono font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">{member.todaySS6CheckIn}</span>
                   ) : (
-                    <Hourglass className="w-2 h-2 md:w-4 md:h-4 text-amber-400/90 animate-pulse drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]" />
+                    <Hourglass className="w-2 h-2 md:w-4 md:h-4 text-white animate-pulse" />
                   )}
                 </div>
               </div>
