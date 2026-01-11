@@ -139,46 +139,59 @@ export default function PublicBoard() {
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-3 gap-1 md:gap-6">
           {membersData.map((member) => (
-            <div key={member.id} className="bg-slate-800 border border-slate-700 rounded md:rounded-3xl shadow-lg p-1 md:p-6 flex flex-col items-center">
+            <div
+              key={member.id}
+              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded md:rounded-3xl shadow-2xl p-1 md:p-6 flex flex-col items-center relative overflow-hidden transition-all duration-300 hover:bg-white/10 ring-1 ring-white/5"
+            >
+              {/* Shinny effect overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+
               {/* Avatar - smaller on mobile */}
-              <div className="w-7 h-7 md:w-14 md:h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-1 md:mb-3 shadow-md">
+              <div className="relative w-7 h-7 md:w-14 md:h-14 bg-gradient-to-br from-indigo-500/80 to-purple-600/80 rounded-full flex items-center justify-center mb-1 md:mb-3 shadow-lg ring-2 ring-white/10 backdrop-blur-sm">
                 <User className="w-4 h-4 md:w-8 md:h-8 text-white" />
               </div>
 
               {/* Name - very small on mobile */}
-              <h2 className="text-center text-[8px] md:text-base font-normal text-white mb-0 md:mb-0 line-clamp-2 px-0.5 leading-tight h-[1.2rem] md:min-h-[2.5rem] flex items-end justify-center pb-1">{member.name}</h2>
+              <h2 className="relative text-center text-[8px] md:text-base font-medium text-white mb-0 md:mb-0 line-clamp-2 px-0.5 leading-tight h-[1.2rem] md:min-h-[2.5rem] flex items-end justify-center pb-1 drop-shadow-md">
+                {member.name}
+              </h2>
 
               {/* NRP - below name */}
-              <div className="text-center text-[7px] md:text-sm text-slate-400 mb-0.5 md:mb-2 -mt-1">{member.nrp}</div>
+              <div className="relative text-center text-[7px] md:text-sm text-blue-200/70 mb-0.5 md:mb-2 -mt-1 font-mono tracking-wide">{member.nrp}</div>
+
               {/* 3 Status Boxes: Yesterday | Today | Tomorrow */}
-              <div className="flex gap-0.5 md:gap-2 mb-0.5 md:mb-4 w-full">
-                {/* Yesterday - Gray */}
-                <div className="flex-1 bg-slate-700/50 rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center border border-slate-600">
+              <div className="relative flex gap-0.5 md:gap-2 mb-0.5 md:mb-4 w-full z-10">
+                {/* Yesterday - Glassy Gray */}
+                <div className="flex-1 bg-white/5 backdrop-blur-md rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center border border-white/10">
                   <div className="text-[10px] md:text-xl font-bold text-slate-300">{member.yesterdayStatus || "-"}</div>
-                  <div className="text-[6px] md:text-xs text-slate-500 uppercase">Kemarin</div>
+                  <div className="text-[6px] md:text-xs text-slate-400 uppercase tracking-wider">Kemarin</div>
                 </div>
 
-                {/* Today - Blue (Active) */}
-                <div className="flex-1 bg-blue-600 rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center shadow-lg shadow-blue-900/20 transform scale-105 border border-blue-500">
-                  <div className="text-[11px] md:text-2xl font-bold text-white">{member.todayStatus || "-"}</div>
-                  <div className="text-[6px] md:text-xs text-blue-100 uppercase font-bold">Hari Ini</div>
+                {/* Today - Glassy Blue (Active) */}
+                <div className="flex-1 bg-blue-600/80 backdrop-blur-md rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center shadow-lg shadow-blue-500/30 transform scale-105 border border-blue-400/30">
+                  <div className="text-[11px] md:text-2xl font-bold text-white drop-shadow-md">{member.todayStatus || "-"}</div>
+                  <div className="text-[6px] md:text-xs text-blue-50 uppercase font-bold tracking-wider">Hari Ini</div>
                 </div>
 
-                {/* Tomorrow - Gray */}
-                <div className="flex-1 bg-slate-700/50 rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center border border-slate-600">
+                {/* Tomorrow - Glassy Gray */}
+                <div className="flex-1 bg-white/5 backdrop-blur-md rounded md:rounded-xl p-0.5 md:p-2 flex flex-col items-center justify-center border border-white/10">
                   <div className="text-[10px] md:text-xl font-bold text-slate-300">{member.tomorrowStatus || "-"}</div>
-                  <div className="text-[6px] md:text-xs text-slate-500 uppercase">Besok</div>
+                  <div className="text-[6px] md:text-xs text-slate-400 uppercase tracking-wider">Besok</div>
                 </div>
               </div>
 
-              {/* Today's Check-in Time - compact */}
-              <div className="bg-slate-700/50 rounded md:rounded-2xl py-1 md:py-2 text-center w-full mb-0.5 md:mb-2 border border-slate-600 flex flex-col justify-center">
-                <div className="text-sm md:text-3xl font-bold text-white leading-none mb-0.5">{formatTime(member.todayCheckIn)}</div>
-                <div className={`text-[7px] md:text-sm font-medium my-0 md:my-0.5 leading-tight ${member.todayCheckIn ? "text-green-400" : "text-red-400"}`}>{member.todayCheckIn ? "Hadir P5M" : "Tidak Hadir P5M"}</div>
+              {/* Today's Check-in Time - compact glass */}
+              <div className="relative bg-white/5 backdrop-blur-md rounded md:rounded-2xl py-1 md:py-2 text-center w-full mb-0.5 md:mb-2 border border-white/10 flex flex-col justify-center shadow-inner custom-shadow">
+                <div className="text-sm md:text-3xl font-bold text-white leading-none mb-0.5 drop-shadow-sm tracking-widest">{formatTime(member.todayCheckIn)}</div>
+                <div className={`text-[7px] md:text-sm font-medium my-0 md:my-0.5 leading-tight ${member.todayCheckIn ? "text-emerald-300" : "text-rose-300"} drop-shadow-md`}>{member.todayCheckIn ? "Hadir P5M" : "Tidak Hadir P5M"}</div>
 
-                <div className="flex items-center justify-center gap-1 opacity-80">
-                  <span className="text-[7px] md:text-sm text-slate-400">Check In SS6</span>
-                  {member.todayStatus ? <CheckCircle className="w-2 h-2 md:w-4 md:h-4 text-green-500" /> : <Hourglass className="w-2 h-2 md:w-4 md:h-4 text-yellow-500 animate-pulse" />}
+                <div className="flex items-center justify-center gap-1 opacity-90 mt-1">
+                  <span className="text-[7px] md:text-sm text-slate-300 font-medium tracking-wide">Check In SS6</span>
+                  {member.todayStatus ? (
+                    <CheckCircle className="w-2 h-2 md:w-4 md:h-4 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  ) : (
+                    <Hourglass className="w-2 h-2 md:w-4 md:h-4 text-amber-400 animate-pulse drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                  )}
                 </div>
               </div>
             </div>
