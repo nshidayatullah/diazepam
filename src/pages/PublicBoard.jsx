@@ -171,8 +171,14 @@ export default function PublicBoard() {
       })
       .subscribe();
 
+    // Polling fallback every 30 seconds
+    const pollingTimer = setInterval(() => {
+      fetchMembersWithAttendance();
+    }, 30000);
+
     return () => {
       clearInterval(timer);
+      clearInterval(pollingTimer);
       supabase.removeChannel(channel);
     };
   }, [fetchMembersWithAttendance]);
