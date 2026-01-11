@@ -8,6 +8,7 @@ export default function WhatsAppGenerator() {
     shift2: [],
     cuti: [],
     off: [],
+    alpa: [],
   });
   const [generatedText, setGeneratedText] = useState("");
   const [copySuccess, setCopySuccess] = useState(false);
@@ -46,34 +47,27 @@ export default function WhatsAppGenerator() {
       const shift2 = [];
       const cuti = [];
       const off = [];
-
-      // Auto-assign Night Roster (NR/NE) to Shift 2 initially?
-      // User request implies manual separation or specific grouping.
-      // Let's rely on status codes first if they indicate shift.
-
-      // Based on STATUS_CODES.md:
-      // PAGI (Day): DR, DL, DE
-      // MALAM (Night): NE, NL, NR
-
-      // However, usually report separates by ACTUAL shift worked.
+      const alpa = [];
 
       members.forEach((member) => {
-        const code = logsMap[member.id] || "NR"; // Default to NR (Night Roster) or Unknown? Or maybe Empty.
+        const code = logsMap[member.id] || "NR"; // Default to NR (Night Roster)
 
         let targetGroup = "off"; // Default group
 
         // Logic mapping
         if (["DR", "DE", "DL"].includes(code)) {
-          // Day Shift codes
           targetGroup = "shift1";
         } else if (["NR", "NE", "NL"].includes(code)) {
-          // Night Shift codes
           targetGroup = "shift2";
+        } else if (["CR", "CS", "CB", "CL"].includes(code)) {
+          // Expanded Cuti codes if needed, keeping basic for now
+          targetGroup = "cuti"; // Only CR was usually mapped, but let's stick to existing logic + strict Cuti
         } else if (["CR"].includes(code)) {
-          // Cuti codes
           targetGroup = "cuti";
+        } else if (["AR", "AL"].includes(code)) {
+          targetGroup = "alpa";
         } else {
-          // Other codes (OL, OR, AL) -> Off
+          // Other codes (OL, OR) -> Off
           targetGroup = "off";
         }
 
@@ -81,12 +75,11 @@ export default function WhatsAppGenerator() {
         // Convert to Title Case
         let displayName = member.name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
-        // Add Check-in time suffix if available, BUT ONLY for Shift 1 (DR, DE, DL)
+        // Add Check-in time suffix if available, BUT ONLY for Shift 1
         const checkInTime = checkInMap[member.id];
         const isShift1Code = ["DR", "DE", "DL"].includes(code);
 
         if (checkInTime && isShift1Code) {
-          // Format HH:MM:SS -> HH.MM
           const formattedTime = checkInTime.substring(0, 5).replace(":", ".");
           displayName += ` (Hadir ${formattedTime})`;
         }
@@ -95,20 +88,19 @@ export default function WhatsAppGenerator() {
           id: member.id,
           name: displayName,
           code: code,
-          isShift2: targetGroup === "shift2", // For manual toggle
+          isShift2: targetGroup === "shift2",
         };
 
         if (targetGroup === "shift1") shift1.push(memberObj);
         else if (targetGroup === "shift2") shift2.push(memberObj);
         else if (targetGroup === "cuti") cuti.push(memberObj);
+        else if (targetGroup === "alpa") alpa.push(memberObj);
         else off.push(memberObj);
       });
 
-      setReportData({ shift1, shift2, cuti, off });
+      setReportData({ shift1, shift2, cuti, off, alpa });
     } catch (error) {
       console.error("Error fetching report data:", error);
-    } finally {
-      // Done
     }
   };
 
@@ -122,15 +114,15 @@ export default function WhatsAppGenerator() {
   }, [reportData, selectedDate]);
 
   const toggleShift = (memberId, currentGroup) => {
+    // Basic toggle won't work perfectly with 5 groups now, simplifying to just swap Shift 1 <-> Shift 2 for now as requested originally
+    // If needed we can make this more robust, but 'Alpa' is usually auto-detected.
     const newData = { ...reportData };
     let member;
 
-    // Find and remove member from current group
     if (currentGroup === "shift1") {
       const idx = newData.shift1.findIndex((m) => m.id === memberId);
       if (idx > -1) {
         member = newData.shift1.splice(idx, 1)[0];
-        // Move to shift 2
         member.isShift2 = true;
         newData.shift2.push(member);
       }
@@ -138,15 +130,10 @@ export default function WhatsAppGenerator() {
       const idx = newData.shift2.findIndex((m) => m.id === memberId);
       if (idx > -1) {
         member = newData.shift2.splice(idx, 1)[0];
-        // Move to shift 1
         member.isShift2 = false;
         newData.shift1.push(member);
       }
     }
-
-    // Sort logic (optional, keep alphabetical or original order?)
-    // For now simple push is fine.
-
     setReportData(newData);
   };
 
@@ -156,7 +143,7 @@ export default function WhatsAppGenerator() {
 
     let text = `*📍UPDATE KEHADIRAN SHENERGY*\n\n`;
     text += `*${formattedDate}*\n`;
-    text += `*Kelompok 4 (Diazepam Group)*\n\n`; // Updated per request
+    text += `*Kelompok 4 (Diazepam Group)*\n\n`;
 
     // Shift 1
     text += `_*Shift 1*_\n`;
@@ -191,12 +178,21 @@ export default function WhatsAppGenerator() {
     }
     text += `\n`;
 
+    // Alpa
+    text += `_*Alpha/Tanpa Keterangan*_\n`;
+    if (reportData.alpa.length > 0) {
+      reportData.alpa.forEach((m, i) => {
+        text += `${i + 1}. ${m.name}\n`;
+      });
+    } else {
+      text += `-\n`;
+    }
+    text += `\n`;
+
     // Off
     text += `_*Off*_\n`;
     if (reportData.off.length > 0) {
       reportData.off.forEach((m, i) => {
-        // Optional: Add status code for context? e.g. Reza J (Cuti)
-        // User example didn't show code, just names.
         text += `${i + 1}. ${m.name}\n`;
       });
     } else {
@@ -286,6 +282,20 @@ export default function WhatsAppGenerator() {
                 </div>
               ))}
               {reportData.cuti.length === 0 && <p className="text-slate-500 text-xs text-center py-2">No members</p>}
+            </div>
+          </div>
+
+          {/* Alpa List */}
+          <div>
+            <h3 className="text-red-500 text-sm font-medium mb-2 uppercase">Alpha / Tanpa Keterangan</h3>
+            <div className="space-y-2 bg-red-900/10 p-2 rounded-lg min-h-[50px] border border-red-500/20">
+              {reportData.alpa.map((member) => (
+                <div key={member.id} className="flex items-center justify-between bg-slate-800 p-2 rounded border border-slate-700 opacity-75">
+                  <span className="text-white text-sm">{member.name}</span>
+                  <span className="text-xs bg-red-800 text-red-200 px-2 py-1 rounded font-bold">{member.code || "AR"}</span>
+                </div>
+              ))}
+              {reportData.alpa.length === 0 && <p className="text-slate-500 text-xs text-center py-2">No members</p>}
             </div>
           </div>
 

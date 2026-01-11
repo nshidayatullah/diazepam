@@ -5,8 +5,10 @@ import * as cheerio from "cheerio";
 import { User, Calendar, Clock, RefreshCw, Loader2, CheckCircle, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 
 // CORS Proxy URL
-const PROXY_URL = "https://cors-anywhere.herokuapp.com/";
-const TARGET_URL = "https://absen.ppa-bib.net/index.php/monitoring/my_attendance";
+// CORS Proxy URL (Handled by Vite Proxy in dev)
+const PROXY_URL = "";
+// Use local proxy path defined in vite.config.js
+const TARGET_URL = "/api-ppa/index.php/monitoring/my_attendance";
 
 export default function AttendanceByMember() {
   const [members, setMembers] = useState([]);
@@ -16,6 +18,8 @@ export default function AttendanceByMember() {
   const [logsLoading, setLogsLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null);
+
+  const [isAutoSync, setIsAutoSync] = useState(false);
 
   const fetchMembers = async () => {
     setLoading(true);
@@ -53,47 +57,98 @@ export default function AttendanceByMember() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      console.log(`Syncing ${member.name}... Response Status:`, response.status);
+
       const $ = cheerio.load(response.data);
-      const rows = $("table tbody tr");
+      const pageTitle = $("title").text().trim();
+      console.log(`Page Title: ${pageTitle}`);
 
+      // Target the specific data table class '.tbl-abs'
+      // Based on HTML provided: <table class="table table-bordered table-striped tbl-abs">
+      const targetRows = $(".tbl-abs tbody tr");
+
+      // Check if it's a login page if no target rows are found
+      if (targetRows.length === 0) {
+        const bodyText = $("body").text().toLowerCase();
+        if (bodyText.includes("login") || bodyText.includes("sign in") || bodyText.includes("masuk")) {
+          return { success: false, name: member.name, error: "Session Expired (Login Page)" };
+        }
+        return { success: false, name: member.name, error: `No data found. Title: ${pageTitle}` };
+      }
+
+      console.log(`Processing ${targetRows.length} rows from .tbl-abs table.`);
+
+      let firstRowDebugging = "";
       const attendanceRecords = [];
-      rows.each((index, row) => {
+
+      targetRows.each((index, row) => {
+        const rowText = $(row).text().replace(/\s+/g, " ").trim();
+        if (index < 3) console.log(`Row ${index}: ${rowText.substring(0, 100)}`); // Debug first 3 rows
+
+        if (index === 0) firstRowDebugging = rowText;
+
         const cells = $(row).find("td");
-        if (cells.length >= 6) {
-          const dateText = $(cells[0]).text().trim();
-          const statusCode = $(cells[1]).text().trim();
-          const checkIn = $(cells[2]).text().trim();
-          const checkOut = $(cells[3]).text().trim();
-          const job = $(cells[4]).text().trim();
-          const sayaPeduli = $(cells[5]).text().trim();
 
-          const dateParts = dateText.split("/");
-          if (dateParts.length === 3) {
-            const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+        // Skip rows that don't have enough columns (Data rows have 6 columns)
+        // 0: Date, 1: Status (NR, DR), 2: In, 3: Out, 4: Job, 5: Saya Peduli
+        if (cells.length < 6) return;
 
-            attendanceRecords.push({
-              date: formattedDate,
-              member_id: member.id,
-              status_code: statusCode || null,
-              check_in: checkIn || null,
-              check_out: checkOut || null,
-              job: job || null,
-              saya_peduli: sayaPeduli || null,
-            });
-          }
+        const dateText = $(cells[0]).text().trim();
+
+        // Simple validation: dateText must look like date (YYYY-MM-DD or contains -)
+        if (!dateText.includes("-")) return;
+
+        const statusCode = $(cells[1]).text().trim();
+        const checkIn = $(cells[2]).text().trim();
+        const checkOut = $(cells[3]).text().trim();
+        const job = $(cells[4]).text().trim();
+
+        // "Saya Peduli" column contains HTML (icon/tooltip), so we just check for 'times' class or similar if needed.
+        // Or just store raw text/html marker
+        const sayaPeduliHtml = $(cells[5]).html() || "";
+        const sayaPeduli = sayaPeduliHtml.includes("fa-times") ? "✖" : "-";
+
+        // Date in HTML is already YYYY-MM-DD (e.g., 2026-01-13)
+        // No need to split/reverse if it matches YYYY-MM-DD format
+        let formattedDate = dateText;
+
+        // Double check format
+        const dateParts = dateText.split("-");
+        if (dateParts.length === 3) {
+          attendanceRecords.push({
+            date: formattedDate,
+            member_id: member.id,
+            status_code: statusCode || null,
+            check_in: checkIn || null,
+            check_out: checkOut || null,
+            job: job || null,
+            saya_peduli: sayaPeduli,
+          });
         }
       });
+
+      // Find latest date for debugging
+      let latestDateFound = "-";
+      if (attendanceRecords.length > 0) {
+        latestDateFound = attendanceRecords[0].date; // Assumes order is desc or first row is latest
+      }
+
+      if (attendanceRecords.length === 0) {
+        return { success: false, name: member.name, error: `Parse failed. Rows: ${targetRows.length}. Sample: [${firstRowDebugging}]` };
+      }
+
+      console.log(`Parsed ${attendanceRecords.length} valid records for ${member.name}. Latest: ${latestDateFound}`);
 
       if (attendanceRecords.length > 0) {
         const { error: upsertError } = await supabase.from("attendance_logs").upsert(attendanceRecords, { onConflict: "member_id,date" });
 
         if (upsertError) {
           console.error(`Error upserting for ${member.name}:`, upsertError);
-          return { success: false, name: member.name };
+          return { success: false, name: member.name, error: "Database Error" };
         }
       }
 
-      return { success: true, name: member.name, count: attendanceRecords.length };
+      return { success: true, name: member.name, count: attendanceRecords.length, latestDate: latestDateFound };
     } catch (error) {
       console.error(`Error syncing ${member.name}:`, error);
       return { success: false, name: member.name, error: error.message };
@@ -107,7 +162,7 @@ export default function AttendanceByMember() {
     }
 
     setSyncing(true);
-    setSyncStatus({ type: "info", message: "Starting sync..." });
+    setSyncStatus({ type: "info", message: "Starting sync... check console for details." });
 
     const results = [];
     for (const member of members) {
@@ -119,12 +174,16 @@ export default function AttendanceByMember() {
     const failures = results.filter((r) => !r.success);
     const failCount = failures.length;
 
+    // Check latest dates
+    const latestDates = results.map((r) => r.latestDate).filter((d) => d && d !== "-");
+    const uniqueDates = [...new Set(latestDates)].slice(0, 3).join(", "); // Show top 3 distinct dates found
+
     setSyncing(false);
 
     if (failCount === 0) {
       setSyncStatus({
         type: "success",
-        message: `Successfully synced ${successCount} members!`,
+        message: `Synced ${successCount} members! Latest Data: ${uniqueDates}`,
       });
     } else {
       // Extract unique error messages
@@ -133,7 +192,7 @@ export default function AttendanceByMember() {
 
       setSyncStatus({
         type: "error",
-        message: `Synced ${successCount}. Failed: ${failCount}. Error: ${errorMessages}`,
+        message: `Synced ${successCount}. Fail: ${failCount}. Errors: ${errorMessages}. Latest Data found: ${uniqueDates}`,
         link: isCorsError ? "https://cors-anywhere.herokuapp.com/corsdemo" : null,
       });
     }
@@ -144,8 +203,23 @@ export default function AttendanceByMember() {
     }
 
     // Increase timeout for error reading
-    setTimeout(() => setSyncStatus(null), 10000);
+    setTimeout(() => setSyncStatus(null), 15000);
   };
+
+  // Auto-Sync Logic (Moved below definition)
+  useEffect(() => {
+    let interval;
+    if (isAutoSync) {
+      // Run immediately on enable? Optional. Let's just wait for interval.
+      interval = setInterval(() => {
+        if (!syncing) {
+          console.log("Auto-sync triggered...");
+          handleSyncAll();
+        }
+      }, 300000); // 5 minutes (300,000 ms)
+    }
+    return () => clearInterval(interval);
+  }, [isAutoSync, syncing]);
 
   useEffect(() => {
     fetchMembers(); // eslint-disable-line
@@ -172,24 +246,37 @@ export default function AttendanceByMember() {
           <p className="text-slate-400 text-sm">View individual attendance records</p>
         </div>
 
-        {/* Sync Button */}
-        <button
-          onClick={handleSyncAll}
-          disabled={syncing}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg font-semibold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {syncing ? (
-            <>
-              <Loader2 size={20} className="animate-spin" />
-              <span>Syncing...</span>
-            </>
-          ) : (
-            <>
-              <RefreshCw size={20} />
-              <span>Sync All Attendance</span>
-            </>
-          )}
-        </button>
+        {/* Auto Sync Toggle */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsAutoSync(!isAutoSync)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition border ${
+              isAutoSync ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700"
+            }`}
+          >
+            <div className={`w-3 h-3 rounded-full ${isAutoSync ? "bg-emerald-400 animate-pulse" : "bg-slate-600"}`} />
+            <span>{isAutoSync ? "Auto-Sync: ON (5m)" : "Auto-Sync: OFF"}</span>
+          </button>
+
+          {/* Sync Button */}
+          <button
+            onClick={handleSyncAll}
+            disabled={syncing}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg font-semibold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {syncing ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                <span>Syncing...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw size={20} />
+                <span>Sync All Attendance</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Sync Status Alert */}

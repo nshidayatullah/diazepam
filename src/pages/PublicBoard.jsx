@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { User, CheckCircle, Hourglass } from "lucide-react";
 import Footer from "../components/Footer";
-import Galaxy from "../components/Galaxy";
 
 export default function PublicBoard() {
   const [membersData, setMembersData] = useState([]);
@@ -35,7 +34,7 @@ export default function PublicBoard() {
         const { data: yesterdayLog } = await supabase.from("attendance_logs").select("status_code").eq("member_id", member.id).eq("date", yesterdayStr).order("created_at", { ascending: false }).limit(1).maybeSingle();
 
         // Get today's status from attendance_logs (PPA sync)
-        const { data: todayLog } = await supabase.from("attendance_logs").select("status_code").eq("member_id", member.id).eq("date", today).order("created_at", { ascending: false }).limit(1).maybeSingle();
+        const { data: todayLog } = await supabase.from("attendance_logs").select("status_code, check_in").eq("member_id", member.id).eq("date", today).order("created_at", { ascending: false }).limit(1).maybeSingle();
 
         // Get today's check-in time from daily_attendance (manual admin input)
         const { data: dailyAttendance } = await supabase.from("daily_attendance").select("check_in_time").eq("member_id", member.id).eq("date", today).maybeSingle();
@@ -48,6 +47,7 @@ export default function PublicBoard() {
           yesterdayStatus: yesterdayLog?.status_code || null,
           todayCheckIn: dailyAttendance?.check_in_time || null,
           todayStatus: todayLog?.status_code || null,
+          todaySS6CheckIn: todayLog?.check_in || null,
           tomorrowStatus: tomorrowLog?.status_code || null,
         };
       })
@@ -104,8 +104,11 @@ export default function PublicBoard() {
   return (
     <div className="h-screen bg-black relative isolate p-1 md:p-4 text-slate-100 flex flex-col justify-start overflow-hidden">
       {/* Background Animation */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <Galaxy starSpeed={0.3} density={1.2} rotationSpeed={0.05} />
+      {/* Background Image */}
+      <div className="absolute inset-0 -z-10">
+        <img src="/bg-public.jpg" alt="Background" className="w-full h-full object-cover opacity-80" />
+        {/* Gradient Overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60"></div>
       </div>
 
       {/* Header - Compact - Flex Shrink 0 to keep size fixed */}
@@ -187,9 +190,9 @@ export default function PublicBoard() {
                 </div>
 
                 <div className="flex items-center justify-center gap-1 opacity-80 mt-0.5 md:mt-1">
-                  <span className="text-[6px] md:text-sm text-slate-300/60 font-medium tracking-wide scale-90 origin-right">Check In SS6</span>
-                  {member.todayStatus ? (
-                    <CheckCircle className="w-2 h-2 md:w-4 md:h-4 text-emerald-400/90 drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                  <span className="text-[7px] md:text-sm text-slate-300/60 font-medium tracking-wide">Check In SS6</span>
+                  {member.todaySS6CheckIn ? (
+                    <span className="text-[7px] md:text-sm text-emerald-400/90 font-mono font-bold drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]">{member.todaySS6CheckIn}</span>
                   ) : (
                     <Hourglass className="w-2 h-2 md:w-4 md:h-4 text-amber-400/90 animate-pulse drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]" />
                   )}
